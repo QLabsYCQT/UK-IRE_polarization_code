@@ -8,16 +8,10 @@ Created on Mon Jan 30 15:07:55 2023
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
 import time
 
-homepath = 'G:/Shared drives/QComms Research/QComms Research/People/'
-
-sys.path.append(homepath)
-
-from HD.Python.EPCfinal.EPC04 import EPCdriver
-#from HD.Python.EPCfinal.pm100d import PM100D
-from MM.python.experiments.hardwareLibs.polarimeter.pax1000IR2 import PAX1000IR2
+from .EPC04 import EPCdriver
+from .pax1000IR2 import PAX1000IR2
 
     
 class PolarisationStateOptimiser():
