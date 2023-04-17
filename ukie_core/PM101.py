@@ -1,30 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jan 12 16:28:52 2023
-
-@author: hd1242
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Sep 21 15:41:01 2022
-
-@author: labuser
-"""
 import pyvisa as visa
 import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-# rm = visa.ResourceManager()
-# for addr in rm.list_resources():
-#     try:
-#         print(addr, '-->', rm.open_resource(addr).query('*IDN?').strip())
-#     except visa.VisaIOError:
-#         pass
-        
+
 class PM101:
-    def __init__(self, address='USB0::0x1313::0x8076::M00806624::INSTR'):#'USB0::0x1313::0x8078::P0035023::INSTR'):
+    # 'USB0::0x1313::0x8078::P0035023::INSTR'):
+    def __init__(self, address='USB0::0x1313::0x8076::M00806624::INSTR'):
         rm = visa.ResourceManager()
         self.pm100d = rm.open_resource(address)
         # print(self.pm100d.query("*IDN?"))
@@ -32,22 +14,22 @@ class PM101:
         self.powerArray = []
         self.timeArray = []
         self.vis = 0.
-        # self.pm100d.write("*RST;") 
+        # self.pm100d.write("*RST;")
         return
-    
+
     def power(self, averaging=1):
-      """Get measured optical power"""
-      self.pm100d.write('power:dc:unit W')
-      p = []
-      for i in range(averaging):
-          p.append(float(self.pm100d.query('measure:power?')))
-      self.powerW = np.mean(p)
-      return self.powerW
-  
+        """Get measured optical power"""
+        self.pm100d.write('power:dc:unit W')
+        p = []
+        for i in range(averaging):
+            p.append(float(self.pm100d.query('measure:power?')))
+        self.powerW = np.mean(p)
+        return self.powerW
+
     def monitorPower(self, tmax=1.0e9, plot=False):
         """Monitor power for tmax seconds with the option to plot live"""
         if plot:
-            plt.figure(figsize = (10, 6))
+            plt.figure(figsize=(10, 6))
             t0 = time.time()
             dt = 0.
             while dt < tmax:
@@ -67,13 +49,12 @@ class PM101:
                 self.powerArray.append(self.power())
                 dt = t - t0
                 self.timeArray.append(dt)
-                
+
     def visibility(self):
-        self.vis = ((max(self.powerArray) - min(self.powerArray)) / 
+        self.vis = ((max(self.powerArray) - min(self.powerArray)) /
                     (max(self.powerArray) + min(self.powerArray)))
         return self.vis
-            
-  
+
 
 # PM = PM100D()
 # # #%%
