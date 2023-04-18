@@ -1,6 +1,6 @@
 import json
-from EPC04 import EPCDriver
-from server import MessageSender
+from .EPC04 import EPCDriver
+from .server import MessageSender
 import threading
 
 
