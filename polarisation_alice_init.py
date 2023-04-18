@@ -1,5 +1,5 @@
-from EPC04 import EPCdriver
-from ycqinst.keithley2231a import Keithley2231A, DeviceMode
+from ukie_core.EPC04 import EPCdriver
+from ycqinst.instruments.keithley2231a import Keithley2231A, DeviceMode
 
 EPC = EPCdriver(EPCAddress='ASRL3::INSTR')
 EPC.setDC()
