@@ -1,0 +1,3 @@
+[submodule "ukie-server"]
+	path = ukie-server
+	url = https://github.com/QLabsYCQT/ukie-server
