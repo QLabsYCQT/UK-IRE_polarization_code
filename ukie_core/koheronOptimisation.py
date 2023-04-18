@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .EPC04 import EPCdriver
+from .EPC04 import EPCDriver
 from .koheronDetector import koheronDetector
 
 
@@ -21,7 +21,7 @@ class PolarisationOptimiser():
 
         # Class intialization:
         if epc is None:
-            self.epc = EPCdriver(EPCAddress='ASRL3::INSTR')
+            self.epc = EPCDriver(EPCAddress='ASRL3::INSTR')
 
         if pm is None:
             self.PM = koheronDetector()
