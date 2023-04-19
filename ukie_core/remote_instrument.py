@@ -2,6 +2,7 @@ import json
 from .EPC04 import EPCDriver
 from .server import MessageSender
 import threading
+from time import sleep
 
 
 def remote_instrument(instrument, name):
@@ -32,6 +33,7 @@ def remote_instrument(instrument, name):
             while True:
                 self.messages += [json.loads(message)
                                   for message in self.messenger.retrieve_messages()]
+                sleep(0.01)
 
         def _is_public_method(self, member):
             is_method = callable(getattr(self, member))

@@ -1,3 +1,7 @@
 [submodule "ukie-server"]
 	path = ukie-server
 	url = https://github.com/QLabsYCQT/ukie-server
+[submodule "yqcinst"]
+	path = yqcinst
+	url = https://github.com/QLabsYCQT/yqcinst
+	branch = keithley2231a
