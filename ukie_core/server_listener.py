@@ -1,4 +1,4 @@
-from server import MessageSender
+from .server import MessageSender
 import threading
 import json
 from time import sleep
