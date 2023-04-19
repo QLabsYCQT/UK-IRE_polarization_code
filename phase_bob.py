@@ -3,6 +3,9 @@ from ukie_core.EPC04 import EPCDriver
 from ukie_core.remote_instrument import RemoteEPCDriver
 import json
 from bullet import Bullet
+import nidaqmx
+import numpy as np
+import time
 
 
 def load_config(config=None):
@@ -28,7 +31,30 @@ def align_remote(config):
 
 
 def acquire_data(config):
-    pass
+    with nidaqmx.Task('Read PD1') as task:
+        task.ai_channels.add_ai_voltage_chan(
+            'Dev1/ai0',
+            min_val=0,
+            max_val=5)
+        task.ai_channels.add_ai_voltage_chan(
+            'Dev1/ai1',
+            min_val=0,
+            max_val=5)
+        task.timing.cfg_samp_clk_timing(
+            2_000_000,
+            sample_mode=nidaqmx.constants.AcquisitionType.FINITE,
+            samps_per_chan=32_000_000)
+        stream = task.in_stream
+        reader = nidaqmx.stream_readers.AnalogMultiChannelReader(stream)
+        task.start()
+        data = np.zeros((2, 32_000_000))
+        reader.read_many_sample(
+            data,
+            nidaqmx.constants.READ_ALL_AVAILABLE,
+            timeout=nidaqmx.constants.WAIT_INFINITELY)
+        task.stop()
+        filename = f'phase-acquisition-{time.time()}'
+        np.save(filename, data)
 
 
 def quit(config):
