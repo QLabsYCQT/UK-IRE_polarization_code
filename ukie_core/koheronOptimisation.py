@@ -22,9 +22,13 @@ class PolarisationOptimiser():
         # Class intialization:
         if epc is None:
             self.epc = EPCDriver(EPCAddress='ASRL3::INSTR')
+        else:
+            self.epc = epc
 
         if pm is None:
             self.PM = koheronDetector()
+        else:
+            self.PM = pm
 
         # Input variable definition:
         self.randomV = randomV  # boolean, start from random voltages?
