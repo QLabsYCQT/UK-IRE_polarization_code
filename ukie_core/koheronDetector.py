@@ -33,3 +33,6 @@ class koheronDetector:
         self.task.stop()
         power = abs(np.mean(self.data, axis=1))
         return power
+    
+    def __del__(self):
+        self.task.close()
