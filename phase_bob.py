@@ -16,16 +16,19 @@ def load_config(config=None):
 
 def align_local(config):
     local_epc = EPCDriver(config['epc']['address'])
-    po = PolarisationOptimiser(config['po_args'], epc=local_epc)
-    po.run()
+    print(config['po_args'])
+    po = PolarisationOptimiser(**config['po_args'], epc=local_epc)
+    po.initialisation()
+    po.gradientSearch()
 
 
 def align_remote(config):
     remote_epc = RemoteEPCDriver(**config['server'])
 
-    po = PolarisationOptimiser(config['po_args'], epc=remote_epc)
+    po = PolarisationOptimiser(**config['po_args'], epc=remote_epc)
     po.epc = remote_epc
-    po.run()
+    po.initialisation()
+    po.gradientSearch()
 
 
 def acquire_data(config):
