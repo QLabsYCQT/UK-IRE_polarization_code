@@ -19,7 +19,7 @@ def set_attenuation(config):
 
 def listen(config):
     sl = ServerListener(**config['server'])
-    sl.instruments += {
+    sl.instruments = {
         'epc': EPCDriver(config['epc']['address']),
         'keithley': Keithley2231A(config['keithley']['address'])
     }
