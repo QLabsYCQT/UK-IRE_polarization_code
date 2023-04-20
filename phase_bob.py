@@ -15,15 +15,13 @@ def load_config(config=None):
 
 
 def align_local(config):
-    local_epc = EPCDriver(EPCAddress='ASRL3::INSTR')
+    local_epc = EPCDriver(config['epc']['address'])
     po = PolarisationOptimiser(config['po_args'], epc=local_epc)
     po.run()
 
 
 def align_remote(config):
-    remote_epc = RemoteEPCDriver(config['hostname'],
-                                 config['local_name'],
-                                 config['remote_name'])
+    remote_epc = RemoteEPCDriver(**config['server'])
 
     po = PolarisationOptimiser(config['po_args'], epc=remote_epc)
     po.epc = remote_epc
