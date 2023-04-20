@@ -33,7 +33,6 @@ class ServerListener():
             messages = [json.loads(message)
                         for message in self.messenger.retrieve_messages()]
             for message in messages:
-                print('executing message')
                 self.execute_message(message)
                 del message
             sleep(0.01)
@@ -53,7 +52,7 @@ class ServerListener():
             'response': function(*args, **kwargs)
         }
 
-        print(self._send_message(json.dumps(reply)))
+        self._send_message(json.dumps(reply))
 
 
 if __name__ == '__main__':
