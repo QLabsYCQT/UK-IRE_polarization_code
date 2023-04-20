@@ -103,19 +103,19 @@ class PolarisationOptimiser():
         if self.plot:
             plt.figure()
 
-        while (self.pointsSinceMax <= self.maxPointsSinceMax) and (self.extinction_ratio < self.erThreshold):
+        while (self.pointsSinceMax <= self.maxPointsSinceMax):
             self.ch = np.argmax(abs(np.array(self.gradients))) + 1
             vStep = self.fineV * (np.sign(self.gradients[self.ch - 1]))
             self.v[self.ch-1] = np.clip(self.v[self.ch-1] + vStep, -5000, 5000)
-            self.epc.setV(self.ch, int(self.v[self.ch-1]))
+            self.epc.setV(int(self.ch), int(self.v[self.ch-1]))
             p = abs(self.PM.getPower()[0])
             self.extinction_ratio = 10 * \
                 np.log10(p / abs(self.PM.getPower()[1]))
-            self.erArray.append(self.extinction_ratio)
+            #self.erArray.append(self.extinction_ratio)
             self.gradients[self.ch - 1] = (p - abs(self.power)) / \
                 (np.sign(self.gradients[self.ch-1])*self.fineV)
             self.power = p
-            print('extinction ratio', self.extinction_ratio)
+            print('Voltage for the optimising Koheron is', self.power)
 
             v1.append(self.v[0])
             v2.append(self.v[1])
@@ -130,10 +130,7 @@ class PolarisationOptimiser():
             else:
                 self.pointsSinceMax += 1
 
-            if self.extinction_ratio > 20:
-                self.fineV = 100
-                if self.extinction_ratio > 24:
-                    self.fineV = 50
+
 
             self.allPowerArray.append(self.power)
             self.plotMaxPowerArray.append(self.power * 300000)
@@ -153,12 +150,9 @@ class PolarisationOptimiser():
                 print('::Algorithm too far from max::')
                 break
 
-        self.extinction_ratio = 10 * \
-            np.log10(self.PM.getPower()[0]/abs(self.PM.getPower()[1]))
 
-        print('::The corresponding extinction ration is ', self.extinction_ratio,
-              '::', self.PM.getPower()[0], self.PM.getPower()[1])
+        print('::The corresponding voltage is ::',self.PM.getPower()[0], self.PM.getPower()[1])
 
     def run(self):
         """Runs the complete optimisation process"""
-        self.initialisation()
+        self.initialisation()
