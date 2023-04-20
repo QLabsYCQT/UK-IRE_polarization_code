@@ -2,7 +2,7 @@ from ukie_core.koheronOptimisation import PolarisationOptimiser
 from ukie_core.EPC04 import EPCDriver
 from ukie_core.remote_instrument import RemoteEPCDriver
 import json
-from bullet import Bullet
+import questionary
 import nidaqmx
 import numpy as np
 import time
@@ -69,23 +69,16 @@ processes = {
     'quit': quit
 }
 
-cli = Bullet(
-    prompt='\nPlease choose a process to run: ',
-    choices=list(processes.keys()),
-    indent=0,
-    align=5,
-    margin=2,
-    shift=0,
-    bullet='',
-    pad_right=5,
-    return_index=True
-)
 
+menu = questionary.select(
+    '\nPlease choose a process to run: ',
+    choices=list(processes.keys())
+)
 
 config = load_config()
 try:
     while True:
-        process = cli.launch()[0]
+        process = menu.ask()
         try:
             processes[process](config)
         except Exception as e:
