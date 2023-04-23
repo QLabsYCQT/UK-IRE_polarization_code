@@ -96,8 +96,3 @@ try:
             print(f'{repr(e)}')
 except KeyboardInterrupt:
     pass
-
-# NOTE: step 1: establish connection to remote and local EPCs and koherons
-# NOTE: step 2: perform polarisation optimisation with Bob's EPC
-# NOTE: step 3: perform polarisation optimisation with Alice's EPC
-# NOTE: step 4: run acquisition
