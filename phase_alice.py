@@ -1,6 +1,6 @@
 from ukie_core.EPC04 import EPCDriver
 from ukie_core.server_listener import ServerListener
-from yqcinst.instruments.keithley2231a import Keithley2231A, DeviceMode
+from yqcinst.instruments.keithley2231a import Keithley2231A
 import json
 import questionary
 
@@ -10,12 +10,6 @@ def load_config(config=None):
         config = json.load(f)
     return config
 
-def set_attenuation(config):
-    keithley = Keithley2231A(config['keithley']['address'])
-    keithley.mode = DeviceMode.REMOTE
-    keithley.enabled = [True, True, True]
-    keithley.voltage = config['evoa']
-    print(keithley.voltage)
 
 def listen(config):
     sl = ServerListener(**config['server'])
@@ -32,7 +26,6 @@ def quit(config):
 
 processes = {
     'load config': load_config,
-    'set attenuation': set_attenuation,
     'listen for remote instructions': listen,
     'quit': quit
 }
