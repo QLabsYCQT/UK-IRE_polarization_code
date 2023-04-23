@@ -41,8 +41,9 @@ def remote_instrument(instrument, name):
 
         def _retrieve_messages(self):
             while True:
+                new_messages = self.messenger.retrieve_messages()
                 self.messages += [json.loads(message)
-                                  for message in self.messenger.retrieve_messages()]
+                                  for message in new_messages]
                 sleep(0.01)
 
         def _is_public_method(self, member):
@@ -55,13 +56,13 @@ def remote_instrument(instrument, name):
             is_public = member[0] != '_'
             return (not is_method) & is_public
 
-        def _remote_decorator(self, func):
+        def _remote_decorator(self, method):
             def wrapper(*args, **kwargs):
-                resp = self._call_remote_func(func.__name__, args, kwargs)
+                resp = self._call_remote_method(method.__name__, args, kwargs)
                 return resp
             return wrapper
 
-        def _call_remote_func(self, method, args, kwargs):
+        def _call_remote_method(self, method, args, kwargs):
             unencoded_message = {
                 'instrument': self.instrument_name,
                 'type': 'method',
