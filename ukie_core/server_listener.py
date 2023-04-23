@@ -4,14 +4,6 @@ import json
 from time import sleep
 
 
-class FakeEpc():
-    def __init__(self):
-        pass
-
-    def setDC(self):
-        return 'successfully set to DC mode on alice'
-
-
 class ServerListener():
 
     def __init__(self, hostname, local_name, remote_name):
@@ -56,7 +48,3 @@ class ServerListener():
         self._send_message(json.dumps(reply))
 
 
-if __name__ == '__main__':
-    sl = ServerListener(
-        'https://king-prawn-app-yv9q2.ondigitalocean.app', 'alice', 'bob')
-    sl.instruments['epc'] = FakeEpc()

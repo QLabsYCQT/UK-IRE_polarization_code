@@ -66,7 +66,3 @@ def remote_instrument(instrument, name):
 
 
 
-if __name__ == '__main__':
-    rd = RemoteEPCDriver(
-        'https://king-prawn-app-yv9q2.ondigitalocean.app', 'bob', 'alice')
-    rd.setDC()
