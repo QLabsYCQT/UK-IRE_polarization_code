@@ -2,6 +2,8 @@ from .server import MessageSender
 import threading
 import json
 from time import sleep
+import pickle
+import codecs
 
 
 class ServerListener():
@@ -31,20 +33,59 @@ class ServerListener():
             sleep(0.01)
 
     def execute_message(self, message: dict):
-        print(message)
+        if message['type'] == 'method':
+            self.execute_method(message)
+        elif message['type'] == 'attribute':
+            if message['action'] == 'get':
+                self.get_attribute(message)
+            elif message['action'] == 'set':
+                self.set_attribute(message)
+
+    def execute_method(self, message):
         instrument_name = message['instrument']
-        function_name = message['function']
+        method_name = message['method']
         args = message['args']
         kwargs = message['kwargs']
         instrument = self.instruments[instrument_name]
-        function = getattr(instrument, function_name)
+        method = getattr(instrument, method_name)
 
         reply = {
             'instrument': instrument_name,
-            'function': function_name,
-            'response': function(*args, **kwargs)
+            'type': 'method',
+            'method': method_name,
+            'response': method(*args, **kwargs)
         }
+        self._send_message(json.dumps(reply))
 
+    def get_attribute(self, message: dict):
+        instrument_name = message['instrument']
+        attribute_name = message['attribute']
+        instrument = self.instruments[instrument_name]
+        value = getattr(instrument, attribute_name)
+
+        reply = {
+            'instrument': instrument_name,
+            'type': 'attribute',
+            'action': 'get',
+            'attribute': attribute_name,
+            'value': codecs.encode(pickle.dumps(value), 'base64').decode()
+        }
+        self._send_message(json.dumps(reply))
+
+    def set_attribute(self, message: dict):
+        instrument_name = message['instrument']
+        attribute_name = message['attribute']
+        value = pickle.loads(codecs.decode(
+            message['value'].encode(), 'base64'))
+        instrument = self.instruments[instrument_name]
+        setattr(instrument, attribute_name, value)
+
+        reply = {
+            'instrument': instrument_name,
+            'type': 'attribute',
+            'action': 'set',
+            'attribute': attribute_name
+        }
         self._send_message(json.dumps(reply))
 
 
