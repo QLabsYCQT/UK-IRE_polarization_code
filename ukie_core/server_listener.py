@@ -22,7 +22,8 @@ class ServerListener():
         self.messenger = MessageSender(self.local_name, self.hostname)
         self.retrieve_thread = threading.Thread(
             name='retrieve',
-            target=self._retrieve_messages)
+            target=self._retrieve_messages,
+            daemon=True)
         self.retrieve_thread.start()
 
     def _send_message(self, message):

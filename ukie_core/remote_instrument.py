@@ -20,7 +20,8 @@ def remote_instrument(instrument, name):
             self.messenger = MessageSender(self.local_name, self.hostname)
             self.retrieve_thread = threading.Thread(
                 name='retrieve',
-                target=self._retrieve_messages)
+                target=self._retrieve_messages,
+                daemon=True)
             self.messages = []
             self.retrieve_thread.start()
             self.instrument_name = name
