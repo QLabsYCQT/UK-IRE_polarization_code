@@ -1,5 +1,4 @@
 import json
-from .EPC04 import EPCDriver
 from .server import MessageSender
 import threading
 from time import sleep
@@ -66,7 +65,6 @@ def remote_instrument(instrument, name):
     return RemoteInstrument
 
 
-RemoteEPCDriver = remote_instrument(EPCDriver, 'epc')
 
 if __name__ == '__main__':
     rd = RemoteEPCDriver(

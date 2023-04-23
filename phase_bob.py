@@ -1,11 +1,16 @@
 from ukie_core.koheronOptimisation import PolarisationOptimiser
 from ukie_core.EPC04 import EPCDriver
-from ukie_core.remote_instrument import RemoteEPCDriver
+from yqcinst.instruments.keithley2231a import Keithley2231A, DeviceMode
+from ukie_core.remote_instrument import remote_instrument
 import json
 import questionary
 import nidaqmx
 import numpy as np
 import time
+
+
+RemoteEPCDriver = remote_instrument(EPCDriver, 'epc')
+RemoteKeithley = remote_instrument(Keithley2231A, 'keithley')
 
 
 def load_config(config=None):
@@ -25,6 +30,10 @@ def align_local(config):
 def align_remote(config):
     remote_epc = RemoteEPCDriver(**config['server'])
 
+    remote_keithley = RemoteKeithley(**config['server'])
+    remote_keithley.mode = DeviceMode.REMOTE
+    remote_keithley.enabled = [True, True, True]
+    remote_keithley.voltage = [5, 5, 5]
     po = PolarisationOptimiser(**config['po_args'], epc=remote_epc)
     po.epc = remote_epc
     po.initialisation()
