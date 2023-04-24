@@ -30,6 +30,8 @@ def remote_instrument(instrument, name):
                             self._remote_getter(attribute),
                             self._remote_setter(attribute)
                         ))
+            # Empty message buffer on server
+            self.messenger.retrieve_messages()
 
         def _send_message(self, message):
             return self.messenger.send_message(self.remote_name, message)

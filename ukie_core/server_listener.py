@@ -14,6 +14,7 @@ class ServerListener():
         self.remote_name = remote_name
         self.instruments = {}
         self.messenger = MessageSender(self.local_name, self.hostname)
+        self.messenger.retrieve_messages()
         self.retrieve_thread = threading.Thread(
             name='retrieve',
             target=self._retrieve_messages,
