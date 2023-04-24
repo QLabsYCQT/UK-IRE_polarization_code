@@ -36,8 +36,7 @@ def align_local():
 
 def align_remote():
     config = load_config()
-    remote_epc = RemoteEPCDriver()
-
+    remote_epc = RemoteEPCDriver(**config['server'])
     remote_keithley = RemoteKeithley(**config['server'])
     remote_keithley.mode = DeviceMode.REMOTE
     remote_keithley.enabled = [True, True, True]
