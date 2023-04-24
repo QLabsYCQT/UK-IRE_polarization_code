@@ -30,11 +30,6 @@ def remote_instrument(instrument, name):
                             self._remote_getter(attribute),
                             self._remote_setter(attribute)
                         ))
-            self.retrieve_thread = threading.Thread(
-                name='retrieve',
-                target=self._retrieve_messages,
-                daemon=True)
-            self.retrieve_thread.start()
 
         def _send_message(self, message):
             return self.messenger.send_message(self.remote_name, message)
@@ -73,11 +68,13 @@ def remote_instrument(instrument, name):
             }
             self._send_message(json.dumps(unencoded_message))
             while True:
-                for i, message in enumerate(self.messages):
-                    if (message['type'] == 'method') & \
-                            (message['method'] == method):
-                        del self.messages[i]
-                        return message['response']
+                if len(self.messages) > 0:
+                    for message in self.messages:
+                        if (message['type'] == 'method') & \
+                                (message['method'] == method):
+                            self.messages.remove(message)
+                            return message['response']
+                self._retrieve_messages()
 
         def _remote_getter(self, attribute):
             def _get_remote_attribute(self):
@@ -89,15 +86,18 @@ def remote_instrument(instrument, name):
                 }
                 self._send_message(json.dumps(unencoded_message))
                 while True:
-                    for i, message in enumerate(self.messages):
-                        if (message['type'] == 'attribute') & \
-                            (message['attribute'] == attribute) & \
-                                (message['action'] == 'get'):
-                            del self.messages[i]
-                            return pickle.loads(
-                                codecs.decode(message['value'].encode(),
-                                              'base64')
-                            )
+                    if len(self.messages) > 0:
+                        for message in self.messages:
+                            if (message['type'] == 'attribute') & \
+                                ((message['attribute'] == attribute) & \
+                                    (message['action'] == 'get')):
+                                self.messages.remove(message)
+                                assert message not in self.messages
+                                return pickle.loads(
+                                    codecs.decode(message['value'].encode(),
+                                                'base64')
+                                )
+                    self._retrieve_messages()
             return _get_remote_attribute
 
         def _remote_setter(self, attribute):
@@ -113,12 +113,14 @@ def remote_instrument(instrument, name):
                 print(unencoded_message)
                 self._send_message(json.dumps(unencoded_message))
                 while True:
-                    for i, message in enumerate(self.messages):
-                        if (message['type'] == 'attribute') & \
-                            (message['attribute'] == attribute) & \
-                                (message['action'] == 'set'):
-                            del self.messages[i]
-                            return None
+                    if len(self.messages) > 0:
+                        for message in self.messages:
+                            if (message['type'] == 'attribute') & \
+                                ((message['attribute'] == attribute) & \
+                                    (message['action'] == 'set')):
+                                self.messages.remove(message)
+                                return None
+                    self._retrieve_messages()
             return _set_remote_attribute
 
     remote_instrument = RemoteInstrument
