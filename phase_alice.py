@@ -25,7 +25,11 @@ def listen():
         'epc': EPCDriver(config['epc']['address']),
         'keithley': Keithley2231A(config['keithley']['address'])
     }
-    return sl
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        sl.stop_thread = True
 
 
 def quit():

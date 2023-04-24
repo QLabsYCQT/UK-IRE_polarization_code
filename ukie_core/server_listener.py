@@ -25,7 +25,10 @@ class ServerListener():
         return self.messenger.send_message(self.remote_name, message)
 
     def _retrieve_messages(self):
-        while True:
+        global stop_thread 
+        stop_thread = False
+        self.stop_thread = stop_thread
+        while (not self.stop_thread):
             messages = [json.loads(message)
                         for message in self.messenger.retrieve_messages()]
             for message in messages:
