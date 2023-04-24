@@ -42,8 +42,9 @@ def remote_instrument(instrument, name):
         def _retrieve_messages(self):
             while True:
                 new_messages = self.messenger.retrieve_messages()
-                self.messages += [json.loads(message)
-                                  for message in new_messages]
+                if len(new_messages) > 0:
+                    self.messages += [json.loads(message) for message in new_messages]
+                    break
                 sleep(0.01)
 
         def _is_public_method(self, member):
