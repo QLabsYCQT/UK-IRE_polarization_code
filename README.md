@@ -2,6 +2,7 @@
 
 This repository contains the code developed to run experiments on deployed fibre between Manchester-Southport, and Southport-Portraine.
 
+Link to project folder in shared drive [here](https://drive.google.com/drive/folders/1Fm4DN06zBZNw2_FUfHMZRcQgkJ7rD39z?usp=share_link).
 ## Getting started
 
 Start by making sure you have Python installed. You can do this by running 
