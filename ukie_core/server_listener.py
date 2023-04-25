@@ -8,12 +8,12 @@ import codecs
 
 class ServerListener():
 
-    def __init__(self, hostname, local_name, remote_name):
+    def __init__(self, hostname, local_name, remote_name, token):
         self.hostname = hostname
         self.local_name = local_name
         self.remote_name = remote_name
         self.instruments = {}
-        self.messenger = MessageSender(self.local_name, self.hostname)
+        self.messenger = MessageSender(self.local_name, self.hostname, token)
         self.messenger.retrieve_messages()
         self.retrieve_thread = threading.Thread(
             name='retrieve',

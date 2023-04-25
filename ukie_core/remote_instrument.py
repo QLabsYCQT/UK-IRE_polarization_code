@@ -9,11 +9,11 @@ import codecs
 def remote_instrument(instrument, name):
     class RemoteInstrument(instrument):
 
-        def __init__(self, hostname, local_name, remote_name):
+        def __init__(self, hostname, local_name, remote_name, token):
             self.hostname = hostname
             self.local_name = local_name
             self.remote_name = remote_name
-            self.messenger = MessageSender(self.local_name, self.hostname)
+            self.messenger = MessageSender(self.local_name, self.hostname, token)
             self.messages = []
             methods = filter(self._is_public_method,
                              dir(self.instrument))
