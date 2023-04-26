@@ -112,7 +112,6 @@ def remote_instrument(instrument, name):
                     'value': codecs.encode(pickle.dumps(value),
                                            'base64').decode()
                 }
-                print(unencoded_message)
                 self._send_message(json.dumps(unencoded_message))
                 while True:
                     if len(self.messages) > 0:
