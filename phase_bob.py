@@ -2,29 +2,16 @@ from ukie_core.koheronOptimisation import PolarisationOptimiser
 from ukie_core.EPC04 import EPCDriver
 from yqcinst.instruments.keithley2231a import Keithley2231A, DeviceMode
 from ukie_core.remote_instrument import remote_instrument
-import json
+from ukie_core.utils import load_config
 import questionary
 import nidaqmx
 import numpy as np
 import time
-import os
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 RemoteEPCDriver = remote_instrument(EPCDriver, 'epc')
 RemoteKeithley = remote_instrument(Keithley2231A, 'keithley')
-
-
-def load_config():
-    config_path = os.environ.get('UKIE_CONFIG_FILE')
-    if config_path is None:
-        config_path = questionary.path(
-            'Please provide the path to the config file: ',
-            default='config.json'
-        ).ask()
-    with open(config_path, 'r') as f:
-        config = json.load(f)
-    return config
 
 
 def align_local():

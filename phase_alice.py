@@ -1,21 +1,8 @@
 from ukie_core.EPC04 import EPCDriver
 from ukie_core.server_listener import ServerListener
+from ukie_core.utils import load_config
 from yqcinst.instruments.keithley2231a import Keithley2231A
-import json
 import questionary
-import os
-
-
-def load_config():
-    config_path = os.environ.get('UKIE_CONFIG_FILE')
-    if config_path is None:
-        config_path = questionary.path(
-            'Please provide the path to the config file: ',
-            default='config.json'
-        ).ask()
-    with open(config_path, 'r') as f:
-        config = json.load(f)
-    return config
 
 
 def listen():
