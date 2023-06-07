@@ -1,60 +1,95 @@
 from ukie_core.PM101 import PolarisationOptimiser
-from yqcinst.instruments.epc04 import EPC04
+from yqcinst.instruments.epc04 import EPC04, DeviceMode
+from ukie_core.utils import load_config, validate_float
 import idqube
 import time
 import numpy as np
+import questionary
 
 
-def init(config):
-    qube = idqube.IDQube("COM4")
-    qubeMin = idqube.IDQube("COM5")
+def alignment():
+    config = load_config()
+    qube1 = idqube.IDQube(config['Q1']['address'])
+    qube2 = idqube.IDQube(config['Q2']['address'])
 
-    qube.set_detector_eff_temp_indexes(1, 1)
-    qubeMin.set_detector_eff_temp_indexes(1, 1)
-
+    qube1.set_detector_eff_temp_indexes(1, 1)
+    qube2.set_detector_eff_temp_indexes(1, 1)
     time.sleep(3)
-    print('The detection efficiency for Q1 is', qube.detector_efficiency)
-    print('The detection efficiency for Q2 is', qubeMin.detector_efficiency)
+
+    print('The detection efficiency for Q1 is', qube1.detector_efficiency)
+    print('The detection efficiency for Q2 is', qube2.detector_efficiency)
 
     epc = EPC04(config['epc']['address'])
     epc.device_mode = DeviceMode.DC
 
-def alignment(config):
-    targetEr = float(
-        input("Input the target extinction ratio in dB (decibel): "))
-    print(':::The target extinction ratio is:', targetEr, 'dB:::')
+    target_er = float(
+        questionary.text(
+            '\nInput target extinction ratio (dB)',
+            validate=validate_float
+        )
+    )
 
-    Base = PolarisationOptimiser(fineV=100,
-                                 zeroV=False,
-                                 minV=False,
-                                 randomV=False,
-                                 plot=True)
+    po = PolarisationOptimiser(
+        **config['po_args']['alignment'],
+        epc=epc
+    )
 
-    Base.run()
+    po.run()
 
 
-def measurement(config):
-    qube = idqube.IDQube("COM4")
-    qubeMin = idqube.IDQube("COM5")
+def measurement():
+    config = load_config()
+    qube1 = idqube.IDQube(config['Q1']['address'])
+    qube2 = idqube.IDQube(config['Q2']['address'])
 
-    qube.set_detector_eff_temp_indexes(4, 1)
-    qubeMin.set_detector_eff_temp_indexes(4, 1)
+    qube1.set_detector_eff_temp_indexes(4, 1)
+    qube2.set_detector_eff_temp_indexes(4, 1)
     time.sleep(3)
 
-    print('Initial count for Q1', qube.photon_count)
-    print('Initial count for Q2', qubeMin.photon_count)
+    print('Initial count for Q1', qube1.photon_count)
+    print('Initial count for Q2', qube2.photon_count)
 
-    qubeArray = []
-    qubeMinArray = []
-    ER = []
+    qube1_counts = []
+    qube2_counts = []
+
     start = time.time()
-    end = time.time()
-    while (end - start) < 600:
-        qubeArray.append(qube.photon_count)
-        qubeMinArray.append(qubeMin.photon_count)
-        ER.append(10 * np.log(qube.photon_count / qube.photon_count))
-        end = time.time()
-    print('::Finish::')
+    while time.time() - start < 600:
+        qube1_counts.append(qube1.photon_count)
+        qube2_counts.append(qube2.photon_count)
 
     filename = input('Input a (safe) filename for output data')
-    np.savetxt(filename, ((qubeArray), (qubeMinArray)), delimiter=',')
+    np.savetxt(
+        filename,
+        (
+            (qube1_counts),
+            (qube2_counts)
+        ),
+        delimiter=','
+    )
+
+
+def quit():
+    raise KeyboardInterrupt
+
+
+processes = {
+    'alignment': alignment,
+    'measurement': measurement,
+    'quit': quit
+}
+
+menu = questionary.select(
+    '\nPlease choose a process to run: ',
+    choices=list(processes.keys())
+)
+
+try:
+    while True:
+        process = menu.ask()
+        try:
+            processes[process]()
+        except Exception as e:
+            print(f'An exception occured whilst executing process {process}:')
+            print(f'{repr(e)}')
+except KeyboardInterrupt:
+    pass
