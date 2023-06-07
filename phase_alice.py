@@ -1,4 +1,4 @@
-from ukie_core.EPC04 import EPCDriver
+from yqcinst.instruments.epc04 import EPC04
 from ukie_core.server_listener import ServerListener
 from ukie_core.utils import load_config
 from yqcinst.instruments.keithley2231a import Keithley2231A
@@ -9,7 +9,7 @@ def listen():
     config = load_config()
     sl = ServerListener(**config['server'])
     sl.instruments = {
-        'epc': EPCDriver(config['epc']['address']),
+        'epc': EPC04(config['epc']['address']),
         'keithley': Keithley2231A(config['keithley']['address'])
     }
     try:

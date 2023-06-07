@@ -1,5 +1,5 @@
 from ukie_core.PM101 import PolarisationOptimiser
-from ukie_core.EPC04 import EPCdriver
+from yqcinst.instruments.epc04 import EPC04
 import idqube
 import time
 import numpy as np
@@ -15,10 +15,9 @@ def init(config):
     time.sleep(3)
     print('The detection efficiency for Q1 is', qube.detector_efficiency)
     print('The detection efficiency for Q2 is', qubeMin.detector_efficiency)
-    EPC = EPCdriver(EPCAddress='ASRL3::INSTR')
-    EPC.setDC()
-    print('working mode for the EPC is', EPC.getmode())
 
+    epc = EPC04(config['epc']['address'])
+    epc.device_mode = DeviceMode.DC
 
 def alignment(config):
     targetEr = float(

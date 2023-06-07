@@ -1,5 +1,5 @@
-from ukie_core.EPC04 import EPCdriver
 from ukie_core.PM101 import PolarisationStateOptimiser
+from yqcinst.instruments.epc04 import EPC04
 from ycqinst.instruments.keithley2231a import Keithley2231A, DeviceMode
 import time
 
