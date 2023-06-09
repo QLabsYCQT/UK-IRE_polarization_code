@@ -35,6 +35,7 @@ class PolarisationOptimiser(ABC):
         self.mode = mode
         self.coarse_voltage_step = coarse_voltage_step
         self.fine_voltage_step = fine_voltage_step
+        self.voltage_step = self.coarse_voltage_step
         self.max_steps_since_local_min = max_steps_since_local_min
         self.epc = epc
         self.epc_channel_count = epc_channel_count
@@ -64,6 +65,8 @@ class PolarisationOptimiser(ABC):
                 self.current_voltages + [self.current_cf],
                 axis=0
             )
+
+            print(self.current_cf, self.min_cf)
 
             if self.current_cf < self.min_cf:
                 steps_since_local_min = 0
@@ -107,10 +110,10 @@ class PolarisationOptimiser(ABC):
 
         self.gradients = [0 for _ in range(self.epc_channel_count)]
         for i, ch in enumerate(self.epc.channels):
-            ch.voltage = self.current_voltages[i] + self.voltage_step
+            ch.voltage = self.current_voltages[i] + self.coarse_voltage_step
             sleep(0.05)
             cf = self.cost_function()
-            self.gradients[i] = (cf - self.current_cf) / self.voltage_step
+            self.gradients[i] = (cf - self.current_cf) / self.coarse_voltage_step
             self.current_cf = cf
         print(self.gradients)
         self.data = np.array(
@@ -121,17 +124,18 @@ class PolarisationOptimiser(ABC):
 
 class KoheronPolarisationOptimiser(PolarisationOptimiser):
     def __init__(self,
-                 cf_threshold,
-                 target_channel=0,
                  detector: koheronDetector,
+                 target_voltage,
+                 target_channel=0,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
-        self.target_er = target_er
+        self.cf_threshold = -1 * target_voltage
         self.detector = detector
+        self.target_channel = target_channel
 
     def cost_function(self):
-        return -1 * self.detector.getPower()[target_channel]
+        return -1 * self.detector.getPower()[self.target_channel]
 
 
 class PAX1000IR2PolarisationOptimiser(PolarisationOptimiser):
