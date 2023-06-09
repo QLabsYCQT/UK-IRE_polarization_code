@@ -1,71 +1,78 @@
-from ukie_core.PM101 import PolarisationOptimiser
 from yqcinst.instruments.epc04 import EPC04, DeviceMode
-from ukie_core.utils import load_config, validate_float
-import idqube
-import time
-import numpy as np
+from ukie_core.polopt import KoheronPolarisationOptimiser as PolOpt
+from ukie_core.koheronDetector import koheronDetector
+from ukie_core.utils import load_config
 import questionary
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import nidaqmx
 
 
 def alignment():
     config = load_config()
-    qube1 = idqube.IDQube(config['Q1']['address'])
-    qube2 = idqube.IDQube(config['Q2']['address'])
-
-    qube1.set_detector_eff_temp_indexes(1, 1)
-    qube2.set_detector_eff_temp_indexes(1, 1)
-    time.sleep(3)
-
-    print('The detection efficiency for Q1 is', qube1.detector_efficiency)
-    print('The detection efficiency for Q2 is', qube2.detector_efficiency)
 
     epc = EPC04(config['epc']['address'])
     epc.device_mode = DeviceMode.DC
 
-    target_er = float(
-        questionary.text(
-            '\nInput target extinction ratio (dB)',
-            validate=validate_float
-        )
+    koheron = koheronDetector()
+    po = PolOpt(
+        **config['po_args'],
+        epc=epc,
+        detector=koheron,
     )
 
-    po = PolarisationOptimiser(
-        **config['po_args']['alignment'],
-        epc=epc
-    )
+    po.initialisation()
+    po.gradient_search()
 
-    po.run()
-
-
-def measurement():
+def monitor_power():
     config = load_config()
-    qube1 = idqube.IDQube(config['Q1']['address'])
-    qube2 = idqube.IDQube(config['Q2']['address'])
+    voltage_min, voltage_max = config['acquisition']['voltage limits']
 
-    qube1.set_detector_eff_temp_indexes(4, 1)
-    qube2.set_detector_eff_temp_indexes(4, 1)
-    time.sleep(3)
+    fig, ax = plt.subplots(1, 1)
+    ai0 = Line2D([], [], color='blue', label='ai0')
+    ai1 = Line2D([], [], color='orange', label='ai1')
+    ax.add_line(ai0)
+    ax.add_line(ai1)
+    ax.set_xlabel('time / s')
+    ax.set_ylabel('voltage / V')
+    ax.set_xlim(0, 10)
+    ax.set_ylim(voltage_min, voltage_max)
+    ax.legend(loc='upper right')
 
-    print('Initial count for Q1', qube1.photon_count)
-    print('Initial count for Q2', qube2.photon_count)
-
-    qube1_counts = []
-    qube2_counts = []
-
-    start = time.time()
-    while time.time() - start < 600:
-        qube1_counts.append(qube1.photon_count)
-        qube2_counts.append(qube2.photon_count)
-
-    filename = input('Input a (safe) filename for output data')
-    np.savetxt(
-        filename,
-        (
-            (qube1_counts),
-            (qube2_counts)
-        ),
-        delimiter=','
-    )
+    with nidaqmx.Task('Read PD1') as task:
+        task.ai_channels.add_ai_voltage_chan(
+            'Dev1/ai0',
+            min_val=voltage_min,
+            max_val=voltage_max)
+        task.ai_channels.add_ai_voltage_chan(
+            'Dev1/ai1',
+            min_val=voltage_min,
+            max_val=voltage_max)
+        task.timing.cfg_samp_clk_timing(
+            2_000,
+            sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS)
+        stream = task.in_stream
+        reader = nidaqmx.stream_readers.AnalogMultiChannelReader(stream)
+        task.start()
+        data = np.zeros((2, 200))
+        history = np.zeros((2, 20_000))
+        t = np.linspace(0, 10, 20_000)
+        fig.canvas.draw()
+        try:
+            while True:
+                reader.read_many_sample(
+                    data,
+                    200,
+                    timeout=nidaqmx.constants.WAIT_INFINITELY)
+                history = np.roll(history, 200, axis=1)
+                history[:,:200] = data
+                ai0.set_data(t, history[0])
+                ai1.set_data(t, history[1])
+                fig.canvas.draw()
+                plt.pause(0.01)
+        except KeyboardInterrupt:
+            task.stop()
 
 
 def quit():
@@ -74,7 +81,7 @@ def quit():
 
 processes = {
     'alignment': alignment,
-    'measurement': measurement,
+    'monitor power': monitor_power,
     'quit': quit
 }
 
