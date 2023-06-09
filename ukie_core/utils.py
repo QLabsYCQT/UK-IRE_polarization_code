@@ -22,8 +22,8 @@ def load_config():
 
 
 def validate_int(value):
-    return re.fullmatch(int_pattern, value)
+    return re.fullmatch(int_pattern, value) is not None
 
 
 def validate_float(value):
-    return re.fullmatch(float_pattern, value)
+    return re.fullmatch(float_pattern, value) is not None
