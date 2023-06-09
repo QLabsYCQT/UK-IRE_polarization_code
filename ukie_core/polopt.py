@@ -13,7 +13,7 @@ def convert_angle(thorlabs_angle):
 
 
 def index_of_abs_max(ls: list):
-    ls = abs(ls)
+    ls = [abs(i) for i in ls]
     return ls.index(max(ls))
 
 
