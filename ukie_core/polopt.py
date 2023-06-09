@@ -121,7 +121,8 @@ class PolarisationOptimiser(ABC):
 
 class KoheronPolarisationOptimiser(PolarisationOptimiser):
     def __init__(self,
-                 target_er,
+                 cf_threshold,
+                 target_channel=0,
                  detector: koheronDetector,
                  *args,
                  **kwargs):
@@ -130,7 +131,7 @@ class KoheronPolarisationOptimiser(PolarisationOptimiser):
         self.detector = detector
 
     def cost_function(self):
-        return self.detector.getPower()
+        return -1 * self.detector.getPower()[target_channel]
 
 
 class PAX1000IR2PolarisationOptimiser(PolarisationOptimiser):
