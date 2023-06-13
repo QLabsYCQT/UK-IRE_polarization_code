@@ -28,8 +28,8 @@ class koheronDetector:
         self.task.start()
 
     def getPower(self):
-        self.data = np.zeros((2, 20))  # input the size of array that I want
-        self.reader.read_many_sample(self.data, 20, timeout=1)
+        self.data = np.zeros((2, 200))  # input the size of array that I want
+        self.reader.read_many_sample(self.data, 200, timeout=1)
         self.task.stop()
         power = abs(np.mean(self.data, axis=1))
         return power
