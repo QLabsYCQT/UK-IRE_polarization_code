@@ -168,6 +168,18 @@ def measurement():
     sw2.switch_state = SwitchState.BAR
 
 
+def safe_mode():
+    config = load_config()
+    sw1 = OSW22(config['osw22']['addresses'][0])
+    sw2 = OSW22(config['osw22']['addresses'][1])
+    sw1.switch_state = SwitchState.BAR
+    sw2.switch_state = SwitchState.BAR
+    remote_keithley = RemoteKeithley(**config['server'])
+    remote_keithley.mode = KeithleyDeviceMode.REMOTE
+    remote_keithley.enabled = [True, True, True]
+    remote_keithley.voltage = [5, 5, 5]
+
+
 def quit():
     raise KeyboardInterrupt
 
@@ -177,6 +189,7 @@ processes = {
     'align local': align_local,
     'monitor power': monitor_power,
     'measurement': measurement,
+    'set switches to BAR state and fully attenuate': safe_mode,
     'quit': quit
 }
 
