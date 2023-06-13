@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import nidaqmx
+from time import sleep
 
 
 RemoteKeithley = remote_instrument(Keithley2231A, 'keithley')
@@ -120,6 +121,53 @@ def monitor_power():
             task.stop()
 
 
+def measurement():
+    config = load_config()
+    voltage_min, voltage_max = config['acquisition']['phase']['voltage limits']
+    sw1 = OSW22(config['osw22']['addresses'][0])
+    sw2 = OSW22(config['osw22']['addresses'][1])
+    sw1.switch_state = SwitchState.BAR
+    sw2.switch_state = SwitchState.BAR
+    with nidaqmx.Task('Read PD1') as task:
+        task.ai_channels.add_ai_voltage_chan(
+            'Dev1/ai0',
+            min_val=voltage_min,
+            max_val=voltage_max)
+        task.ai_channels.add_ai_voltage_chan(
+            'Dev1/ai1',
+            min_val=voltage_min,
+            max_val=voltage_max)
+        task.timing.cfg_samp_clk_timing(
+            2_000,
+            sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS)
+        stream = task.in_stream
+        reader = nidaqmx.stream_readers.AnalogMultiChannelReader(stream)
+        task.start()
+        data = np.zeros((2, 200))
+    remote_keithley = RemoteKeithley(**config['server'])
+    remote_keithley.mode = KeithleyDeviceMode.REMOTE
+    remote_keithley.enabled = [True, True, True]
+    remote_keithley.voltage = config['acquisition']['polarisation']['EVOA voltages']
+    assert remote_keithley.voltage == [0.0, 4.05, 5.0]
+    if questionary.confirm(
+        'Send light to SNSPD?',
+    ).ask():
+        for i in range(5):
+            print(f'Light on SNSPD in {5-i}s')
+            sleep(1)
+        sw1.switch_state = SwitchState.CROSS
+        sw2.switch_state = SwitchState.CROSS
+
+        questionary.confirm(
+            'Finished measurement?',
+        ).ask()
+    else:
+        print('Cancelling measurement setup')
+
+    sw1.switch_state = SwitchState.BAR
+    sw2.switch_state = SwitchState.BAR
+
+
 def quit():
     raise KeyboardInterrupt
 
@@ -128,6 +176,7 @@ processes = {
     'align remote': align_remote,
     'align local': align_local,
     'monitor power': monitor_power,
+    'measurement': measurement,
     'quit': quit
 }
 
