@@ -1,7 +1,12 @@
-from yqcinst.instruments.epc04 import EPC04, DeviceMode
-from ukie_core.polopt import KoheronPolarisationOptimiser as PolOpt
+from yqcinst.instruments.osw22 import OSW22, SwitchState
+from yqcinst.instruments.epc04 import EPC04, DeviceMode as EPCDeviceMode
+from yqcinst.instruments.keithley2231a import Keithley2231A, DeviceMode as KeithleyDeviceMode
+from ukie_core.polopt import (KoheronERPolarisationOptimiser as KPolOpt,
+                              PAX1000IR2PolarisationOptimiser as PPolOpt,
+                              convert_angle)
 from ukie_core.koheronDetector import koheronDetector
-from ukie_core.utils import load_config
+from ukie_core.utils import load_config, validate_int
+from ukie_core.remote_instrument import remote_instrument
 import questionary
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,15 +14,55 @@ from matplotlib.lines import Line2D
 import nidaqmx
 
 
-def alignment():
+RemoteKeithley = remote_instrument(Keithley2231A, 'keithley')
+RemotePolOpt = remote_instrument(PPolOpt, 'po')
+
+
+def align_remote():
     config = load_config()
 
+    azimuth = int(
+        questionary.text(
+            'Input integer target azimuth ψ in (-90°, 90°]',
+            validate=validate_int
+        ).ask()
+    )
+    ellipticity = int(
+        questionary.text(
+            'Input integer target ellipticity χ in (-45°, 45°]',
+            validate=validate_int
+        ).ask()
+    )
+
+    po = RemotePolOpt(**config['server'])
+    po.target_azimuth = convert_angle(azimuth)
+    po.target_ellipticity = convert_angle(ellipticity)
+
+    po.initialisation()
+    po.gradient_search()
+
+
+
+def align_local():
+    config = load_config()
+    sw1 = OSW22(config['osw22']['addresses'][0])
+    sw2 = OSW22(config['osw22']['addresses'][1])
+    sw1.switch_state = SwitchState.BAR
+    sw2.switch_state = SwitchState.BAR
+    assert sw1.switch_state == SwitchState.BAR
+    assert sw2.switch_state == SwitchState.BAR
+
+    remote_keithley = RemoteKeithley(**config['server'])
+    remote_keithley.mode = KeithleyDeviceMode.REMOTE
+    remote_keithley.enabled = [True, True, True]
+    remote_keithley.voltage = [0, 0, 0]
+
     epc = EPC04(config['epc']['address'])
-    epc.device_mode = DeviceMode.DC
+    epc.device_mode = EPCDeviceMode.DC
 
     koheron = koheronDetector()
-    po = PolOpt(
-        **config['po_args'],
+    po = KPolOpt(
+        **config['po_args']['bob'],
         epc=epc,
         detector=koheron,
     )
@@ -80,7 +125,8 @@ def quit():
 
 
 processes = {
-    'alignment': alignment,
+    'align remote': align_remote,
+    'align local': align_local,
     'monitor power': monitor_power,
     'quit': quit
 }
