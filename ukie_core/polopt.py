@@ -26,7 +26,7 @@ class PolarisationOptimiser(ABC):
     def __init__(self,
                  mode=InitMode.RANDOM_V,
                  coarse_voltage_step=100,
-                 fine_voltage_step=50,
+                 fine_voltage_step=40,
                  max_steps_since_local_min=10,
                  epc: EPC04 = None,
                  epc_channel_count=4,
@@ -66,7 +66,7 @@ class PolarisationOptimiser(ABC):
                 axis=0
             )
 
-            print(self.current_cf, self.min_cf)
+            print(f'Cost function: {self.current_cf}', end='\r')
 
             if self.current_cf < self.min_cf:
                 steps_since_local_min = 0
@@ -80,13 +80,14 @@ class PolarisationOptimiser(ABC):
                 self.voltage_step = self.coarse_voltage_step
             
             if self.current_cf < self.cf_threshold:
+                print(f'Cost function: {self.current_cf}')
                 break
 
             if steps_since_local_min == self.max_steps_since_local_min:
-                self.initialisation()
+                self.calculate_gradients()
                 steps_since_local_min = 0
             
-            if np.max(self.current_voltages) > 4500:
+            if np.max(np.abs(self.current_voltages)) > 4500:
                 self.initialisation()
 
     @abstractmethod
@@ -96,7 +97,7 @@ class PolarisationOptimiser(ABC):
     def initialisation(self):
         if self.mode is InitMode.RANDOM_V:
             self.initial_voltages = [
-                int((random.random() - 0.5) * 10000) for _ in range(4)
+                int((random.random() - 0.5) * 5000) for _ in range(4)
             ]
         elif self.mode is InitMode.ZERO_V:
             self.initial_voltages = [0 for _ in range(4)]
@@ -109,17 +110,19 @@ class PolarisationOptimiser(ABC):
         self.current_voltages = self.initial_voltages
 
         self.gradients = [0 for _ in range(self.epc_channel_count)]
+        self.calculate_gradients()
+        self.data = np.array(
+            self.current_voltages + [self.current_cf]
+        )
+        self.min_cf = self.current_cf
+
+    def calculate_gradients(self):
         for i, ch in enumerate(self.epc.channels):
             ch.voltage = self.current_voltages[i] + self.coarse_voltage_step
             sleep(0.05)
             cf = self.cost_function()
             self.gradients[i] = (cf - self.current_cf) / self.coarse_voltage_step
             self.current_cf = cf
-        print(self.gradients)
-        self.data = np.array(
-            self.current_voltages + [self.current_cf]
-        )
-        self.min_cf = self.current_cf
 
 
 class KoheronPolarisationOptimiser(PolarisationOptimiser):
@@ -141,9 +144,9 @@ class KoheronPolarisationOptimiser(PolarisationOptimiser):
 class PAX1000IR2PolarisationOptimiser(PolarisationOptimiser):
 
     def __init__(self,
-                 target_azimuth,
-                 target_ellipticity,
-                 polarimeter: PAX1000IR2,
+                polarimeter: PAX1000IR2,
+                 target_azimuth=0,
+                 target_ellipticity=0,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)

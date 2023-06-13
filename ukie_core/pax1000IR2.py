@@ -21,7 +21,6 @@ class PAX1000IR2:
         self.timeseriesDic = {}
         self.time = []
         # self.polarimeter.write('*CLS')
-        print(self.polarimeter.query('*IDN?'))
         # self.connect()
         return
     
