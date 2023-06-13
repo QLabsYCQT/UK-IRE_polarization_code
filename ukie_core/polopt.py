@@ -66,7 +66,7 @@ class PolarisationOptimiser(ABC):
                 axis=0
             )
 
-            print(self.current_cf, self.min_cf)
+            print(f'Cost function: {self.current_cf}', end='\r')
 
             if self.current_cf < self.min_cf:
                 steps_since_local_min = 0
@@ -80,6 +80,7 @@ class PolarisationOptimiser(ABC):
                 self.voltage_step = self.coarse_voltage_step
             
             if self.current_cf < self.cf_threshold:
+                print(f'Cost function: {self.current_cf}')
                 break
 
             if steps_since_local_min == self.max_steps_since_local_min:
@@ -148,9 +149,9 @@ class KoheronPolarisationOptimiser(PolarisationOptimiser):
 class PAX1000IR2PolarisationOptimiser(PolarisationOptimiser):
 
     def __init__(self,
-                 target_azimuth,
-                 target_ellipticity,
-                 polarimeter: PAX1000IR2,
+                polarimeter: PAX1000IR2,
+                 target_azimuth=0,
+                 target_ellipticity=0,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
