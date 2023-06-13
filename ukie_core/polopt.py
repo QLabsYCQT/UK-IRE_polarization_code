@@ -123,11 +123,6 @@ class PolarisationOptimiser(ABC):
             cf = self.cost_function()
             self.gradients[i] = (cf - self.current_cf) / self.coarse_voltage_step
             self.current_cf = cf
-        print(self.gradients)
-        self.data = np.array(
-            self.current_voltages + [self.current_cf]
-        )
-        self.min_cf = self.current_cf
 
 
 class KoheronPolarisationOptimiser(PolarisationOptimiser):
