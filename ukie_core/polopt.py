@@ -124,8 +124,7 @@ class PolarisationOptimiser(ABC):
             self.gradients[i] = (cf - self.current_cf) / self.coarse_voltage_step
             self.current_cf = cf
 
-
-class KoheronPolarisationOptimiser(PolarisationOptimiser):
+class KoheronPowerPolarisationOptimiser(PolarisationOptimiser):
     def __init__(self,
                  detector: koheronDetector,
                  target_voltage,
@@ -140,6 +139,19 @@ class KoheronPolarisationOptimiser(PolarisationOptimiser):
     def cost_function(self):
         return -1 * self.detector.getPower()[self.target_channel]
 
+class KoheronERPolarisationOptimiser(PolarisationOptimiser):
+    def __init__(self,
+                 detector: koheronDetector,
+                 target_er,
+                 *args,
+                 **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cf_threshold = -1 * target_er
+        self.detector = detector
+
+    def cost_function(self):
+        p1, p2 = self.detector.getPower()
+        return 10*np.log10(p1/p2)
 
 class PAX1000IR2PolarisationOptimiser(PolarisationOptimiser):
 
