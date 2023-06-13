@@ -26,7 +26,7 @@ class PolarisationOptimiser(ABC):
     def __init__(self,
                  mode=InitMode.RANDOM_V,
                  coarse_voltage_step=100,
-                 fine_voltage_step=50,
+                 fine_voltage_step=40,
                  max_steps_since_local_min=10,
                  epc: EPC04 = None,
                  epc_channel_count=4,
