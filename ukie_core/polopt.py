@@ -83,7 +83,7 @@ class PolarisationOptimiser(ABC):
                 break
 
             if steps_since_local_min == self.max_steps_since_local_min:
-                self.initialisation()
+                self.calculate_gradients()
                 steps_since_local_min = 0
             
             if np.max(np.abs(self.current_voltages)) > 4500:
@@ -109,6 +109,13 @@ class PolarisationOptimiser(ABC):
         self.current_voltages = self.initial_voltages
 
         self.gradients = [0 for _ in range(self.epc_channel_count)]
+        self.calculate_gradients()
+        self.data = np.array(
+            self.current_voltages + [self.current_cf]
+        )
+        self.min_cf = self.current_cf
+
+    def calculate_gradients(self):
         for i, ch in enumerate(self.epc.channels):
             ch.voltage = self.current_voltages[i] + self.coarse_voltage_step
             sleep(0.05)
