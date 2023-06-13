@@ -86,7 +86,7 @@ class PolarisationOptimiser(ABC):
                 self.initialisation()
                 steps_since_local_min = 0
             
-            if np.max(self.current_voltages) > 4500:
+            if np.max(np.abs(self.current_voltages)) > 4500:
                 self.initialisation()
 
     @abstractmethod
@@ -96,7 +96,7 @@ class PolarisationOptimiser(ABC):
     def initialisation(self):
         if self.mode is InitMode.RANDOM_V:
             self.initial_voltages = [
-                int((random.random() - 0.5) * 10000) for _ in range(4)
+                int((random.random() - 0.5) * 5000) for _ in range(4)
             ]
         elif self.mode is InitMode.ZERO_V:
             self.initial_voltages = [0 for _ in range(4)]
