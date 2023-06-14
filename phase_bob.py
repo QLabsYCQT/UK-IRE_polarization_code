@@ -14,6 +14,17 @@ RemoteEPC04 = remote_instrument(EPC04, 'epc')
 RemoteKeithley = remote_instrument(Keithley2231A, 'keithley')
 
 
+def initialise():
+    config = load_config()
+    remote_keithley = RemoteKeithley(**config['server'])
+    remote_keithley.mode = KeithleyDeviceMode.REMOTE_LOCK
+    remote_keithley.enabled = [True, True, True]
+    local_epc = EPC04(config['epc']['address'])
+    local_epc.device_mode = EPCDeviceMode.DC
+    remote_epc = RemoteEPC04(**config['server'])
+    remote_epc.device_mode = EPCDeviceMode.DC
+
+
 def align_local():
     config = load_config()
     local_epc = EPC04(config['epc']['address'])
@@ -138,6 +149,9 @@ menu = questionary.select(
 )
 
 try:
+    print('Initialising...', end='\r')
+    initialise()
+    print('Initialised!   ')
     while True:
         process = menu.ask()
         try:
