@@ -168,7 +168,7 @@ processes = {
 
 
 menu = questionary.select(
-    '\nPlease choose a process to run: ',
+    'Please choose a process to run: ',
     choices=list(processes.keys())
 )
 
