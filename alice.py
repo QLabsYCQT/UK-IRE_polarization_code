@@ -18,7 +18,11 @@ def listen():
         polarimeter=polarimeter,
     )
     sl.instruments = {
-        'epc': EPC04(config['epc']['address']),
+        'epc': epc,
+        'epc_ch1': epc.channels[0],
+        'epc_ch2': epc.channels[1],
+        'epc_ch3': epc.channels[2],
+        'epc_ch4': epc.channels[3],
         'keithley': Keithley2231A(config['keithley']['address']),
         'po': po
     }
