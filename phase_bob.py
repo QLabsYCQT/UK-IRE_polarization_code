@@ -1,6 +1,7 @@
-from ukie_core.koheronOptimisation import PolarisationOptimiser
-from yqcinst.instruments.epc04 import EPC04
-from yqcinst.instruments.keithley2231a import Keithley2231A, DeviceMode
+from yqcinst.instruments.epc04 import EPC04, Channel as EPC04Channel, DeviceMode as EPCDeviceMode
+from yqcinst.instruments.keithley2231a import Keithley2231A, DeviceMode as KeithleyDeviceMode
+from ukie_core.polopt import KoheronPowerPolarisationOptimiser as KPolOpt
+from ukie_core.koheronDetector import koheronDetector
 from ukie_core.remote_instrument import remote_instrument
 from ukie_core.utils import load_config
 import questionary
@@ -11,6 +12,10 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 RemoteEPC04 = remote_instrument(EPC04, 'epc')
+RemoteEPC04Channel1 = remote_instrument(EPC04Channel, 'epc_ch1')
+RemoteEPC04Channel2 = remote_instrument(EPC04Channel, 'epc_ch2')
+RemoteEPC04Channel3 = remote_instrument(EPC04Channel, 'epc_ch3')
+RemoteEPC04Channel4 = remote_instrument(EPC04Channel, 'epc_ch4')
 RemoteKeithley = remote_instrument(Keithley2231A, 'keithley')
 
 
@@ -27,34 +32,53 @@ def initialise():
 
 def align_local():
     config = load_config()
+    remote_keithley = RemoteKeithley(**config['server'])
     local_epc = EPC04(config['epc']['address'])
-    print(config['po_args'])
-    po = PolarisationOptimiser(**config['po_args'], epc=local_epc)
+
+    config = config['alignment']['phase']
+    remote_keithley.voltage = config['EVOA voltages']['local']
+
+    
+    koheron = koheronDetector()
+
+    po = KPolOpt(
+        target_voltage=config['polopt']['target_voltage']['local'],
+        epc=local_epc,
+        detector=koheron,
+    )
+
     po.initialisation()
-    po.gradientSearch()
+    po.gradient_search()
+    remote_keithley.voltage = [0, 0, 0]
 
 
 def align_remote():
     config = load_config()
-    remote_epc = RemoteEPC04(**config['server'])
     remote_keithley = RemoteKeithley(**config['server'])
-    remote_keithley.mode = DeviceMode.REMOTE
-    remote_keithley.enabled = [True, True, True]
-    remote_keithley.voltage = [5, 5, 5]
-    po = PolarisationOptimiser(**config['po_args'], epc=remote_epc)
-    po.epc = remote_epc
+    remote_epc = RemoteEPC04(**config['server'])
+    remote_epc.channels = [
+        RemoteEPC04Channel1(**config['server']),
+        RemoteEPC04Channel2(**config['server']),
+        RemoteEPC04Channel3(**config['server']),
+        RemoteEPC04Channel4(**config['server'])
+    ]
+    
+    config = config['alignment']['phase']
+    remote_keithley.voltage = config['EVOA voltages']['remote']
+
+    po = KPolOpt(
+        target_voltage=config['polopt']['target_voltage']['remote'],
+        epc=remote_epc,
+        detector=koheronDetector(),
+    )
+
     po.initialisation()
-    po.gradientSearch()
+    po.gradient_search()
+    remote_keithley.voltage = [0, 0, 0]
 
 
 def monitor_power():
-    config = load_config()
-    remote_keithley = RemoteKeithley(**config['server'])
-    config = config['acquisition']
-    remote_keithley.mode = DeviceMode.REMOTE
-    remote_keithley.enabled = [True, True, True]
-    remote_keithley.voltage = config['EVOA voltages']
-    time.sleep(1)
+    config = load_config()['acquisition']['phase']
     voltage_min, voltage_max = config['voltage limits']
 
     fig, ax = plt.subplots(1, 1)
